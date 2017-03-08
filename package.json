@@ -1,0 +1,43 @@
+{
+  "name": "lint-neo-yt",
+  "version": "1.0.0",
+  "description": "Neo's Linter",
+  "main": "js/app.js",
+  "scripts": {
+    "prebuild": "npm install",
+    "build": "browserify -g uglifyify -o app.js index.js",
+    "postbuild": "mkdir -p public_html/ && cp app.js public_html/ && cp index.html public_html/"
+  },
+  "author": "Amrit Panesar <neo@neo.yt>",
+  "license": "MIT",
+  "repository": "https://github.com/Neo-Desktop/lint-neo-yt",
+  "devDependencies": {
+    "bootstrap": "^3.3.7",
+    "bootswatch": "^3.3.7",
+    "browserify": "^14.1.0",
+    "browserify-css": "^0.10.0",
+    "browserify-shim": "^3.8.13",
+    "bulkify": "^1.4.2",
+    "hasher": "^1.2.0",
+    "highlight.js": "^9.9.0",
+    "htmllint": "^0.6.0",
+    "jquery": "^3.1.1",
+    "uglifyify": "^3.0.4"
+  },
+  "browserify": {
+    "transform": [
+      "browserify-css",
+      "browserify-shim"
+    ]
+  },
+  "browserify-css": {
+    "autoInject": true,
+    "minify": true,
+    "rootDir": "./",
+    "autoInjectOptions": {
+      "verbose": true,
+      "insertAt": "bottom"
+    }
+  },
+  "browserify-shim": {}
+}

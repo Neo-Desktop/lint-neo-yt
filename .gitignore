@@ -182,3 +182,8 @@ xcuserdata/
 *.moved-aside
 *.xccheckout
 *.xcscmblueprint
+
+
+app.js
+
+public_html
