@@ -1,0 +1,2 @@
+# lint-neo-yt
+Linter!
