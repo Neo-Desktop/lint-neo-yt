@@ -20,9 +20,12 @@
     "bulkify": "^1.4.2",
     "hasher": "^1.2.0",
     "highlight.js": "^9.9.0",
+    "html": "^1.0.0",
     "htmllint": "^0.6.0",
     "jquery": "^3.1.1",
-    "uglifyify": "^3.0.4"
+    "js-beautify": "^1.6.11",
+    "uglifyify": "^3.0.4",
+    "xml-beautifier": "^0.3.0"
   },
   "browserify": {
     "transform": [
