@@ -31,6 +31,9 @@ var beautify_html = require('js-beautify').html;
 // xml-beautify library
 var beautify_xml = require('xml-beautifier');
 
+// sql-formatter library
+var beautify_sql = require('sql-formatter');
+
 
 $('window').ready(function () {
 
@@ -51,6 +54,7 @@ $('window').ready(function () {
             case 'json':
             case 'js':
             case 'css':
+            case 'sql':
                 $('#navbar').find('>ul>li.active').removeClass('active');
                 $('#'+type+'_tab').addClass('active');
 
@@ -96,6 +100,8 @@ $('window').ready(function () {
                 case 'css':
                     stringOut = hljs.highlightAuto(beautify_css(stringIn)).value;
                     break;
+                case 'sql':
+                    stringOut = hljs.highlightAuto(beautify_sql.format(stringIn)).value;
             }
         } catch (e) {
             stringOut = 'Error: Unable to parse ' + type + '<br>' + e;
