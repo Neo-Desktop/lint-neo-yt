@@ -19,12 +19,21 @@
         </div>
         <div id="navbar" class="collapse navbar-collapse">
             <ul class="nav navbar-nav">
-                <li id="html_tab" class="active"><a href="#">HTML</a></li>
-                <li id="json_tab"><a href="#">JSON</a></li>
-                <li id="xml_tab"><a href="#">XML</a></li>
-                <li id="js_tab"><a href="#">JavaScript</a></li>
-                <li id="css_tab"><a href="#">CSS</a></li>
-                <li id="sql_tab"><a href="#">SQL</a></li>
+                <li id="html_tab" data-name="HTML Linter" class="active"><a href="#">HTML</a></li>
+                <li id="json_tab" data-name="JSON Linter"><a href="#">JSON</a></li>
+                <li id="xml_tab" data-name="XML Linter"><a href="#">XML</a></li>
+                <li id="js_tab" data-name="JavaScript Linter"><a href="#">JavaScript</a></li>
+                <li id="css_tab" data-name="CSS Linter"><a href="#">CSS</a></li>
+                <li id="sql_tab" data-name="SQL Linter"><a href="#">SQL</a></li>
+                <li id="encode_decode_tab" class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="true">Encode/Decode <span class="caret"></span></a>
+                    <ul class="dropdown-menu" role="menu">
+                        <li id="urlencode_tab" data-extra-highlight="encode_decode_tab" data-name="URL Encoder"><a href="#">URLEncode</a></li>
+                        <li id="urldecode_tab" data-extra-highlight="encode_decode_tab" data-name="URL Decoder"><a href="#">URLDecode</a></li>
+                        <li id="base64encode_tab" data-extra-highlight="encode_decode_tab" data-name="Base64 Encoder"><a href="#">Base64Encode</a></li>
+                        <li id="base64decode_tab" data-extra-highlight="encode_decode_tab" data-name="Base64 Decoder"><a href="#">Base64Decode</a></li>
+                    </ul>
+                </li>
             </ul>
         </div><!-- /.nav-collapse -->
     </div><!-- /.container -->

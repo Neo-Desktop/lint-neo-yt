@@ -6,7 +6,10 @@
   "scripts": {
     "prebuild": "npm install",
     "build": "browserify -g uglifyify -o app.js index.js",
-    "postbuild": "mkdir -p public_html/ && cp app.js public_html/ && cp index.html public_html/"
+    "postbuild": "mkdir -p public_html/ && cp app.js public_html/ && cp index.html public_html/",
+    "prebuild:dev": "npm run prebuild",
+    "build:dev": "browserify -o app.js debug.js index.js",
+    "postbuild:dev": "npm run postbuild"
   },
   "author": "Amrit Panesar <neo@neo.yt>",
   "license": "MIT",
@@ -18,6 +21,7 @@
     "browserify-css": "^0.10.0",
     "browserify-shim": "^3.8.13",
     "bulkify": "^1.4.2",
+    "crypto-js": "^3.1.9-1",
     "hasher": "^1.2.0",
     "highlight.js": "^9.9.0",
     "html": "^1.0.0",
