@@ -5,10 +5,10 @@
   "main": "js/app.js",
   "scripts": {
     "prebuild": "npm install",
-    "build": "browserify -g uglifyify -o app.js index.js",
+    "build": "browserify -u debug.js -g uglifyify -o app.js index.js",
     "postbuild": "mkdir -p public_html/ && cp app.js public_html/ && cp index.html public_html/",
     "prebuild:dev": "npm run prebuild",
-    "build:dev": "browserify -o app.js debug.js index.js",
+    "build:dev": "browserify -d -o app.js index.js debug.js",
     "postbuild:dev": "npm run postbuild"
   },
   "author": "Amrit Panesar <neo@neo.yt>",

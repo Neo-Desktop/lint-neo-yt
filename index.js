@@ -35,38 +35,126 @@ var beautify_xml = require('xml-beautifier');
 // sql-formatter library
 var beautify_sql = require('sql-formatter');
 
-// debugging assistance
-var debug = (window.doTheDebugDo) ? {
-    log: window.console.log.bind(window.console, '%s'),
-    type: window.console.log.bind(window.console, '%s: %s'),
-    error: window.console.error.bind(window.console, 'error: %s'),
-    info: window.console.info.bind(window.console, 'info: %s'),
-    warn: window.console.warn.bind(window.console, 'warn: %s')
-} : {
-    log: function() {},
-    type: function() {},
-    error: function() {},
-    warn: function() {},
-    info: function() {}
+/**
+ * JSON linting!
+ * @param json
+ */
+var jsonLint = function(json) {
+    if (typeof json !== 'string') {
+        return JSON.stringify(json, undefined, 4);
+    } else {
+        return jsonLint(JSON.parse(json));
+    }
+};
+
+
+// debug shim
+window.debug = {
+    log:    function() {},
+    type:   function() {},
+    error:  function() {},
+    warn:   function() {},
+    info:   function() {}
+};
+
+
+var hashShim = {
+    /**
+     * Returns hash, code, and type based on hashIn and separator
+     * @param hashIn
+     * @param separator
+     * @param doHash
+     * @return {{type: string, code: string, hash: string}}
+     */
+    getHash: function (hashIn, separator, doHash) {
+        hashIn      = typeof hashIn     !== 'string'    ? hasher.getHash()  : hashIn;
+        separator   = typeof separator  !== 'string'    ? hasher.separator  : separator;
+        doHash      = typeof doHash     !== 'boolean'   ? false             : doHash;
+
+        var out = {
+            'type': '',
+            'code': '',
+            'hash': ''
+        };
+        var split = hashIn.split(separator, 2);
+        out.type = split[0];
+
+        if (doHash) {
+            split = hashIn.split(separator, 3);
+            out.hash = split[1];
+            out.code = split[2];
+        } else {
+            out.code = split[1];
+        }
+
+        if (typeof out.code === 'string') {
+            out.code = atob(out.code);
+        } else {
+            out.code = '';
+        }
+
+        return out;
+    },
+
+    /**
+     * Compares the first substring of separator with one and two
+     * @param one
+     * @param two
+     * @param separator
+     * @returns {boolean}
+     */
+    hashTypeCompare: function(one, two, separator) {
+        separator   = typeof separator !== 'string' ? hasher.separator : separator;
+
+        var oneS = one.split(separator, 1)[0];
+        var twoS = two.split(separator, 1)[0];
+
+        debug.type("hashTypeCompare", "one: {" + oneS + "} two: {" + twoS + "} === " + (oneS === twoS ? 'true' : 'false'));
+
+        return oneS === twoS;
+    },
+
+    /**
+     * Calls hasher.setHash()
+     */
+    setHash: function(path) {
+        debug.type("setHash() in", arguments);
+
+        // arguments[0]; // = type
+        arguments[1] = btoa(arguments[1]); // = code/hash
+        if (typeof arguments[2] !== 'undefined') {
+            arguments[2] = btoa(arguments[2]); // code
+        }
+
+        debug.type("setHash() out", arguments);
+
+        hasher.setHash.apply(this, arguments);
+    },
+
+    /**
+     * Calls hasher.replaceHash()
+     */
+    replaceHash: function(path) {
+        debug.type("replaceHash() in", arguments);
+
+        // arguments[0]; // = type
+        arguments[1] = btoa(arguments[1]); // = code/hash
+        if (typeof arguments[2] !== 'undefined') {
+            arguments[2] = btoa(arguments[2]); // code
+        }
+
+        debug.type("replaceHash() out", arguments);
+
+        hasher.replaceHash.apply(this, arguments);
+    }
+
 };
 
 $('window').ready(function () {
 
     // main I/O
-    var input = $('#input');
-    var output = $('#output');
-
-    /**
-     * JSON linting!
-     * @param json
-     */
-    var jsonLint = function(json) {
-        if (typeof json !== 'string') {
-            return JSON.stringify(json, undefined, 4);
-        } else {
-            return jsonLint(JSON.parse(json));
-        }
-    };
+    var input   = $('#input');
+    var output  = $('#output');
 
     /**
      * hasher page changer function
@@ -75,12 +163,10 @@ $('window').ready(function () {
      */
     var changeType = function(type, setHash)
     {
-        setHash = typeof setHash === 'undefined' ? true : setHash;
+        setHash = typeof setHash !== 'boolean' ? true : setHash;
+        debug.type('changeType()', 'setHash: ' + (setHash ? 'true' : 'false'));
 
-        var hash = hasher.getHashAsArray();
-
-        var code = hash[1];
-        code = typeof code === 'undefined' ? '' : code;
+        var hash = hashShim.getHash();
 
         switch (type) {
             case 'html':
@@ -93,7 +179,7 @@ $('window').ready(function () {
             case 'urldecode':
             case 'base64encode':
             case 'base64decode':
-                debug.type('changeType()', type);
+                debug.type('changeType()', 'type: ' + type);
 
                 $('#navbar').find('.active').removeClass('active');
                 var tab = $('#'+type+'_tab');
@@ -106,16 +192,16 @@ $('window').ready(function () {
                 $('#header').text(tab.data('name'));
 
                 if (setHash) {
-                    debug.type('changeType()', 'Calling hasher.sethash with {'+ type +'} : {'+ code +'}');
-                    hasher.setHash(type, code);
+                    debug.type('changeType()', 'Calling hasher.sethash with {'+ type +'} : {'+ hash.code +'}');
+                    hashShim.setHash(type, hash.code);
                 } else {
                     debug.type('changeType()', 'Not calling hasher.sethash');
                 }
                 break;
 
             default:
-                debug.type('changeType()', 'Default Case: Calling hasher.sethash with {html} : {'+ code +'}');
-                hasher.setHash('html', code);
+                debug.type('changeType()', 'Default Case: Calling hasher.sethash with {html} : {'+ hash.code +'}');
+                hashShim.setHash('html', hash.code);
         }
 
     };
@@ -126,8 +212,8 @@ $('window').ready(function () {
      * @param code
      */
     var beautify = function (type, code) {
-        code = typeof code === 'undefined' ? '' : code;
         var stringOut = '';
+
         try {
             switch(type) {
                 case 'html':
@@ -178,40 +264,28 @@ $('window').ready(function () {
     hasher.changed.add(function(newVal, oldVal) {
         debug.type('hasher.changed()', 'Old Val: ' + oldVal + ' New Val: ' + newVal);
 
-        var doChangeType = true;
+        var hash            = hashShim.getHash();
+        var doChangeType    = !hashShim.hashTypeCompare(newVal, oldVal);
 
-        if (oldVal.split(hasher.separator, 1)[0] === newVal.split(hasher.separator, 1)[0]) {
-            doChangeType = false;
-        }
+        changeType(hash.type, doChangeType);
 
-        var hash = hasher.getHashAsArray();
-        var type = hash[0];
-        var code = hash[1];
+        debug.type('hasher.changed()', 'Set input value to {'+ hash.code +'}');
+        input.val(hash.code);
 
-        changeType(type, doChangeType);
-
-        code = typeof code === 'undefined' ? '' : code;
-        code = decodeURIComponent(code);
-
-        debug.type('hasher.changed()', 'Set input value to {'+ code +'}');
-        input.val(code);
+        debug.type('hasher.changed()', 'Calling beautify with {'+ hash.type +'} : {'+ hash.code +'}');
+        beautify(hash.type, hash.code);
     });
     hasher.initialized.add(function() {
         debug.type('hasher.initialized()', 'Start');
 
-        var hash = hasher.getHashAsArray();
-        var type = hash[0];
-        var code = hash[1];
+        var hash = hashShim.getHash();
+        changeType(hash.type, false);
 
-        changeType(type, false);
+        debug.type('hasher.initialized()', 'Set input value to {'+ hash.code +'}');
+        input.val(hash.code);
 
-        code = typeof code === 'undefined' ? '' : code;
-        code = decodeURIComponent(code);
-
-        input.val(code);
-
-        debug.type('hasher.initialized()', 'Calling beautify with {'+ type +'} : {'+ code +'}');
-        beautify(type, code)
+        debug.type('hasher.initialized()', 'Calling beautify with {'+ hash.type +'} : {'+ hash.code +'}');
+        beautify(hash.type, hash.code)
     });
     hasher.init();
 
@@ -227,16 +301,11 @@ $('window').ready(function () {
     });
 
     // function main ()
-    input.change(function(e) {
-        var hash = hasher.getHashAsArray();
+    input.on('input', function(e) {
+        var hash = hashShim.getHash();
+        var code = e.target.value;
 
-        var type = hash[0];
-        var code = input.val();
-        code = typeof code === 'undefined' ? '' : code;
-
-        debug.type('input.change', 'Calling beautify with {'+ type +'} : {'+ code +'}');
-
-        beautify(type, code);
+        hashShim.setHash(hash.type, code);
     });
 
 });
