@@ -3,14 +3,19 @@
  */
 
 // debug shim
-(function() {
+(function () {
     if (typeof window.debug !== 'object') {
         window.debug = {
-            log:    function() {},
-            type:   function() {},
-            error:  function() {},
-            warn:   function() {},
-            info:   function() {}
+            log: function () {
+            },
+            type: function () {
+            },
+            error: function () {
+            },
+            warn: function () {
+            },
+            info: function () {
+            }
         };
     }
 })();
@@ -52,7 +57,7 @@ var beautify_sql = require('sql-formatter');
  * JSON linting!
  * @param json
  */
-var jsonLint = function(json) {
+var jsonLint = function (json) {
     if (typeof json !== 'string') {
         return JSON.stringify(json, undefined, 4);
     } else {
@@ -70,9 +75,9 @@ var hashShim = {
      * @return {{type: string, code: string, hash: string}}
      */
     getHash: function (hashIn, separator, doHash) {
-        hashIn      = typeof hashIn     !== 'string'    ? hasher.getHash()  : hashIn;
-        separator   = typeof separator  !== 'string'    ? hasher.separator  : separator;
-        doHash      = typeof doHash     !== 'boolean'   ? false             : doHash;
+        hashIn = typeof hashIn !== 'string' ? hasher.getHash() : hashIn;
+        separator = typeof separator !== 'string' ? hasher.separator : separator;
+        doHash = typeof doHash !== 'boolean' ? false : doHash;
 
         var out = {
             'type': '',
@@ -106,8 +111,8 @@ var hashShim = {
      * @param separator
      * @returns {boolean}
      */
-    hashTypeCompare: function(one, two, separator) {
-        separator   = typeof separator !== 'string' ? hasher.separator : separator;
+    hashTypeCompare: function (one, two, separator) {
+        separator = typeof separator !== 'string' ? hasher.separator : separator;
 
         var oneS = one.split(separator, 1)[0];
         var twoS = two.split(separator, 1)[0];
@@ -120,7 +125,7 @@ var hashShim = {
     /**
      * Calls hasher.setHash()
      */
-    setHash: function(path) {
+    setHash: function (path) {
         debug.type("setHash() in", arguments);
 
         // arguments[0]; // = type
@@ -137,7 +142,7 @@ var hashShim = {
     /**
      * Calls hasher.replaceHash()
      */
-    replaceHash: function(path) {
+    replaceHash: function (path) {
         debug.type("replaceHash() in", arguments);
 
         // arguments[0]; // = type
@@ -156,16 +161,15 @@ var hashShim = {
 $('window').ready(function () {
 
     // main I/O
-    var input   = $('#input');
-    var output  = $('#output');
+    var input = $('#input');
+    var output = $('#output');
 
     /**
      * hasher page changer function
      * @param type
      * @param setHash
      */
-    var changeType = function(type, setHash)
-    {
+    var changeType = function (type, setHash) {
         setHash = typeof setHash !== 'boolean' ? true : setHash;
         debug.type('changeType()', 'setHash: ' + (setHash ? 'true' : 'false'));
 
@@ -185,17 +189,17 @@ $('window').ready(function () {
                 debug.type('changeType()', 'type: ' + type);
 
                 $('#navbar').find('.active').removeClass('active');
-                var tab = $('#'+type+'_tab');
+                var tab = $('#' + type + '_tab');
                 tab.addClass('active');
 
                 if (tab.data('extra-highlight') !== '') {
-                    $('#'+tab.data('extra-highlight')).addClass('active');
+                    $('#' + tab.data('extra-highlight')).addClass('active');
                 }
 
                 $('#header').text(tab.data('name'));
 
                 if (setHash) {
-                    debug.type('changeType()', 'Calling hasher.sethash with {'+ type +'} : {'+ hash.code +'}');
+                    debug.type('changeType()', 'Calling hasher.sethash with {' + type + '} : {' + hash.code + '}');
                     hashShim.setHash(type, hash.code);
                 } else {
                     debug.type('changeType()', 'Not calling hasher.sethash');
@@ -203,7 +207,7 @@ $('window').ready(function () {
                 break;
 
             default:
-                debug.type('changeType()', 'Default Case: Calling hasher.sethash with {html} : {'+ hash.code +'}');
+                debug.type('changeType()', 'Default Case: Calling hasher.sethash with {html} : {' + hash.code + '}');
                 hashShim.setHash('html', hash.code);
         }
 
@@ -218,11 +222,11 @@ $('window').ready(function () {
         var stringOut = '';
 
         try {
-            switch(type) {
+            switch (type) {
                 case 'html':
                     htmlLint(code).then(function (lintOutput) {
                         debug.log(lintOutput);
-                    }, function(e) {
+                    }, function (e) {
                         debug.log(e);
                     }).catch(function (e) {
                         debug.log(e);
@@ -264,47 +268,47 @@ $('window').ready(function () {
     };
 
     // hasher setup (now that the function exists)
-    hasher.changed.add(function(newVal, oldVal) {
+    hasher.changed.add(function (newVal, oldVal) {
         debug.type('hasher.changed()', 'Old Val: ' + oldVal + ' New Val: ' + newVal);
 
-        var hash            = hashShim.getHash();
-        var doChangeType    = !hashShim.hashTypeCompare(newVal, oldVal);
+        var hash = hashShim.getHash();
+        var doChangeType = !hashShim.hashTypeCompare(newVal, oldVal);
 
         changeType(hash.type, doChangeType);
 
-        debug.type('hasher.changed()', 'Set input value to {'+ hash.code +'}');
+        debug.type('hasher.changed()', 'Set input value to {' + hash.code + '}');
         input.val(hash.code);
 
-        debug.type('hasher.changed()', 'Calling beautify with {'+ hash.type +'} : {'+ hash.code +'}');
+        debug.type('hasher.changed()', 'Calling beautify with {' + hash.type + '} : {' + hash.code + '}');
         beautify(hash.type, hash.code);
     });
-    hasher.initialized.add(function() {
+    hasher.initialized.add(function () {
         debug.type('hasher.initialized()', 'Start');
 
         var hash = hashShim.getHash();
         changeType(hash.type, false);
 
-        debug.type('hasher.initialized()', 'Set input value to {'+ hash.code +'}');
+        debug.type('hasher.initialized()', 'Set input value to {' + hash.code + '}');
         input.val(hash.code);
 
-        debug.type('hasher.initialized()', 'Calling beautify with {'+ hash.type +'} : {'+ hash.code +'}');
+        debug.type('hasher.initialized()', 'Calling beautify with {' + hash.type + '} : {' + hash.code + '}');
         beautify(hash.type, hash.code)
     });
     hasher.init();
 
     // hook into the navbar tabs and use hasher for them
     var navbar = $('#navbar');
-    navbar.find('>ul>li:not(.dropdown)').click(function(e) {
+    navbar.find('>ul>li:not(.dropdown)').click(function (e) {
         e.preventDefault();
         changeType(this.id.replace('_tab', ''));
     });
-    navbar.find('.dropdown>ul>li').click(function(e) {
+    navbar.find('.dropdown>ul>li').click(function (e) {
         e.preventDefault();
         changeType(this.id.replace('_tab', ''));
     });
 
     // function main ()
-    input.on('input', function(e) {
+    input.on('input', function (e) {
         var hash = hashShim.getHash();
         var code = e.target.value;
 
