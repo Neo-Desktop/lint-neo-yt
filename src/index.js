@@ -2,6 +2,19 @@
  * Created by neo on 3/6/17.
  */
 
+// debug shim
+(function() {
+    if (typeof window.debug !== 'object') {
+        window.debug = {
+            log:    function() {},
+            type:   function() {},
+            error:  function() {},
+            warn:   function() {},
+            info:   function() {}
+        };
+    }
+})();
+
 // can't get browserify-shim to work right
 // let's just make it work here
 window.$ = window.jQuery = require('jquery');
@@ -45,16 +58,6 @@ var jsonLint = function(json) {
     } else {
         return jsonLint(JSON.parse(json));
     }
-};
-
-
-// debug shim
-window.debug = {
-    log:    function() {},
-    type:   function() {},
-    error:  function() {},
-    warn:   function() {},
-    info:   function() {}
 };
 
 
