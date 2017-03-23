@@ -5,11 +5,10 @@
   "main": "js/app.js",
   "scripts": {
     "prebuild": "npm install",
-    "build": "browserify -u debug.js -g uglifyify -o app.js index.js",
-    "postbuild": "mkdir -p public_html/ && cp app.js public_html/ && cp index.html public_html/",
+    "build": "grunt build",
+
     "prebuild:dev": "npm run prebuild",
-    "build:dev": "browserify -d -o app.js index.js debug.js",
-    "postbuild:dev": "npm run postbuild"
+    "build:dev": "grunt"
   },
   "author": "Amrit Panesar <neo@neo.yt>",
   "license": "MIT",
@@ -22,6 +21,13 @@
     "browserify-shim": "^3.8.13",
     "bulkify": "^1.4.2",
     "crypto-js": "^3.1.9-1",
+    "grunt": "^1.0.1",
+    "grunt-browserify": "^5.0.0",
+    "grunt-cache-breaker": "^2.0.1",
+    "grunt-cli": "^1.2.0",
+    "grunt-contrib-clean": "^1.0.0",
+    "grunt-contrib-copy": "^1.0.0",
+    "grunt-contrib-uglify": "^2.2.0",
     "hasher": "^1.2.0",
     "highlight.js": "^9.9.0",
     "html": "^1.0.0",
@@ -31,6 +37,17 @@
     "sql-formatter": "^1.2.0",
     "uglifyify": "^3.0.4",
     "xml-beautifier": "^0.3.0"
+  },
+  "grunt": {
+    "src": {
+      "path": "./src",
+      "script": "index.js"
+    },
+    "build": {
+      "path": "./public_html",
+      "script": "app",
+      "html": "index.html"
+    }
   },
   "browserify": {
     "transform": [

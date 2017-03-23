@@ -7,7 +7,7 @@
 window.$ = window.jQuery = require('jquery');
 
 // include bootstrap css and javascript
-require('./app.css');
+require('./index.css');
 require('bootstrap');
 
 // use hasher for application page management
