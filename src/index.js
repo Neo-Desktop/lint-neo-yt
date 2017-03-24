@@ -53,55 +53,68 @@ var beautify_xml = require('xml-beautifier');
 // sql-formatter library
 var beautify_sql = require('sql-formatter');
 
+// crypto-js library
+var CryptoJS = require('crypto-js');
+
+// bcrypt-js library
+var bcrypt = require('bcryptjs');
+
+var crypto = {
+    MD5: function() {
+        return CryptoJS.MD5.apply(this, arguments).toString(CryptoJS.enc.Hex);
+    },
+    SHA1: function() {
+        return CryptoJS.SHA1.apply(this, arguments).toString(CryptoJS.enc.Hex);
+    },
+    SHA256: function() {
+        return CryptoJS.SHA256.apply(this, arguments).toString(CryptoJS.enc.Hex);
+    },
+    SHA224: function() {
+        return CryptoJS.SHA224.apply(this, arguments).toString(CryptoJS.enc.Hex);
+    },
+    SHA512: function() {
+        return CryptoJS.SHA512.apply(this, arguments).toString(CryptoJS.enc.Hex);
+    },
+    SHA384: function() {
+        return CryptoJS.SHA384.apply(this, arguments).toString(CryptoJS.enc.Hex);
+    },
+    SHA3: function() {
+        return CryptoJS.SHA3.apply(this, arguments).toString(CryptoJS.enc.Hex);
+    },
+    RIPEMD160: function() {
+        return CryptoJS.RIPEMD160.apply(this, arguments).toString(CryptoJS.enc.Hex);
+    },
+    bcrypt: function(stringIn) {
+        return bcrypt.hashSync(stringIn, 10);
+    }
+};
+
 /**
  * JSON linting!
  * @param json
  */
 var jsonLint = function (json) {
-    if (typeof json !== 'string') {
-        return JSON.stringify(json, undefined, 4);
-    } else {
-        return jsonLint(JSON.parse(json));
-    }
+    return typeof json !== 'string' ? JSON.stringify(json, undefined, 4) : jsonLint(JSON.parse(json));
 };
-
 
 var hashShim = {
     /**
      * Returns hash, code, and type based on hashIn and separator
      * @param hashIn
      * @param separator
-     * @param doHash
      * @return {{type: string, code: string, hash: string}}
      */
-    getHash: function (hashIn, separator, doHash) {
+    getHash: function (hashIn, separator) {
         hashIn = typeof hashIn !== 'string' ? hasher.getHash() : hashIn;
         separator = typeof separator !== 'string' ? hasher.separator : separator;
-        doHash = typeof doHash !== 'boolean' ? false : doHash;
 
-        var out = {
-            'type': '',
-            'code': '',
-            'hash': ''
+        var split = hashIn.split(separator, 3);
+
+        return {
+            'type': typeof split[0] === 'string' ? split[0] : '',
+            'code': typeof split[1] === 'string' ? atob(split[1]) : '',
+            'hash': typeof split[2] === 'string' ? atob(split[2]) : ''
         };
-        var split = hashIn.split(separator, 2);
-        out.type = split[0];
-
-        if (doHash) {
-            split = hashIn.split(separator, 3);
-            out.hash = split[1];
-            out.code = split[2];
-        } else {
-            out.code = split[1];
-        }
-
-        if (typeof out.code === 'string') {
-            out.code = atob(out.code);
-        } else {
-            out.code = '';
-        }
-
-        return out;
     },
 
     /**
@@ -129,10 +142,8 @@ var hashShim = {
         debug.type("setHash() in", arguments);
 
         // arguments[0]; // = type
-        arguments[1] = btoa(arguments[1]); // = code/hash
-        if (typeof arguments[2] !== 'undefined') {
-            arguments[2] = btoa(arguments[2]); // code
-        }
+        arguments[1] = btoa(arguments[1]); // = code
+        arguments[2] = typeof arguments[2] !== 'undefined' ? btoa(arguments[2]) : arguments[2]; // hash
 
         debug.type("setHash() out", arguments);
 
@@ -146,10 +157,8 @@ var hashShim = {
         debug.type("replaceHash() in", arguments);
 
         // arguments[0]; // = type
-        arguments[1] = btoa(arguments[1]); // = code/hash
-        if (typeof arguments[2] !== 'undefined') {
-            arguments[2] = btoa(arguments[2]); // code
-        }
+        arguments[1] = btoa(arguments[1]); // = code
+        arguments[2] = typeof arguments[2] !== 'undefined' ? btoa(arguments[2]) : arguments[2]; // hash
 
         debug.type("replaceHash() out", arguments);
 
@@ -186,6 +195,15 @@ $('window').ready(function () {
             case 'urldecode':
             case 'base64encode':
             case 'base64decode':
+            case 'md5_hash':
+            case 'sha1_hash':
+            case 'sha256_hash':
+            case 'sha224_hash':
+            case 'sha512_hash':
+            case 'sha384_hash':
+            case 'sha3_hash':
+            case 'ripemd160_hash':
+            case 'bcrypt_hash':
                 debug.type('changeType()', 'type: ' + type);
 
                 $('#navbar').find('.active').removeClass('active');
@@ -231,34 +249,61 @@ $('window').ready(function () {
                     }).catch(function (e) {
                         debug.log(e);
                     });
-                    stringOut = hljs.highlightAuto(beautify_html(code)).value;
+                    stringOut = hljs.highlight('html', beautify_html(code), true).value;
                     break;
                 case 'xml':
-                    stringOut = hljs.highlightAuto(beautify_xml(code)).value;
+                    stringOut = hljs.highlight('xml', beautify_xml(code), true).value;
                     break;
                 case 'json':
-                    stringOut = hljs.highlightAuto(jsonLint(code)).value;
+                    stringOut = hljs.highlight('json', jsonLint(code), true).value;
                     break;
                 case 'js':
-                    stringOut = hljs.highlightAuto(beautify_js(code)).value;
+                    stringOut = hljs.highlight('js', beautify_js(code), true).value;
                     break;
                 case 'css':
-                    stringOut = hljs.highlightAuto(beautify_css(code)).value;
+                    stringOut = hljs.highlight('css', beautify_css(code), true).value;
                     break;
                 case 'sql':
-                    stringOut = hljs.highlightAuto(beautify_sql.format(code)).value;
+                    stringOut = hljs.highlight('sql', beautify_sql.format(code), true).value;
                     break;
                 case 'urlencode':
-                    stringOut = hljs.highlightAuto(encodeURIComponent(code)).value;
+                    stringOut = hljs.highlight('yaml', encodeURIComponent(code), true).value;
                     break;
                 case 'urldecode':
-                    stringOut = hljs.highlightAuto(decodeURIComponent(code)).value;
+                    stringOut = hljs.highlight('yaml', decodeURIComponent(code), true).value;
                     break;
                 case 'base64encode':
-                    stringOut = hljs.highlightAuto(btoa(code)).value;
+                    stringOut = hljs.highlight('yaml', btoa(code), true).value;
                     break;
                 case 'base64decode':
-                    stringOut = hljs.highlightAuto(atob(code)).value;
+                    stringOut = hljs.highlight('yaml', atob(code), true).value;
+                    break;
+                case 'md5_hash':
+                    stringOut = hljs.highlight('yaml', crypto.MD5(code), true).value;
+                    break;
+                case 'sha1_hash':
+                    stringOut = hljs.highlight('yaml', crypto.SHA1(code), true).value;
+                    break;
+                case 'sha256_hash':
+                    stringOut = hljs.highlight('yaml', crypto.SHA256(code), true).value;
+                    break;
+                case 'sha224_hash':
+                    stringOut = hljs.highlight('yaml', crypto.SHA224(code), true).value;
+                    break;
+                case 'sha512_hash':
+                    stringOut = hljs.highlight('yaml', crypto.SHA512(code), true).value;
+                    break;
+                case 'sha384_hash':
+                    stringOut = hljs.highlight('yaml', crypto.SHA384(code), true).value;
+                    break;
+                case 'sha3_hash':
+                    stringOut = hljs.highlight('yaml', crypto.SHA3(code), true).value;
+                    break;
+                case 'ripemd160_hash':
+                    stringOut = hljs.highlight('yaml', crypto.RIPEMD160(code), true).value;
+                    break;
+                case 'bcrypt_hash':
+                    stringOut = hljs.highlight('yaml', crypto.bcrypt(code), true).value;
                     break;
             }
         } catch (e) {
