@@ -1,6 +1,6 @@
 {
   "name": "lint-neo-yt",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Neo's Linter",
   "main": "js/app.js",
   "scripts": {
