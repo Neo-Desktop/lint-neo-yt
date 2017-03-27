@@ -57,7 +57,7 @@ var beautify_sql = require('sql-formatter');
 var bcrypt = require('bcryptjs');
 
 // forge library
-var forge = require('forge');
+var forge = require('node-forge');
 
 // gencryption
 var gencryption = require("gencryption");
