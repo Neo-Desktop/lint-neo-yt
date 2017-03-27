@@ -68,21 +68,106 @@ var cryptoShim = {
             return md.digest().toHex();
         }
     },
-    MD5: function () {
-        var type = 'md5';
-        cryptoShim.shim[type] = typeof cryptoShim.shim[type] === 'undefined' ? forge.md[type].create() : cryptoShim.shim[type];
-        cryptoShim.shim[type].update.apply(this, arguments);
-        return cryptoShim.shim.out(cryptoShim.shim[type]);
+    /**
+     * MD(4|5) support
+     * @param type
+     * @param textIn
+     * @return {*}
+     * @constructor
+     */
+    MD: function (type, textIn) {
+        switch (type) {
+            case 4:
+                type = "md4";
+                return gencryption.md4.getHashOfTextSync.apply(this, [arguments[1]]);
+                break;
+            case 5:
+                type = "md5";
+                return gencryption.md5.getHashOfTextSync.apply(this, [arguments[1]]);
+            default:
+                throw new Error("Unable to parse MD " + type);
+        }
     },
-    SHA1: function () {
-        var type = 'sha1';
-        cryptoShim.shim[type] = typeof cryptoShim.shim[type] === 'undefined' ? forge.md[type].create() : cryptoShim.shim[type];
-        cryptoShim.shim[type].update.apply(this, arguments);
-        return cryptoShim.shim.out(cryptoShim.shim[type]);
+    /**
+     * SHA(1|2|3|KE) support
+     * @param type
+     * @param bits
+     * @param textIn
+     * @param outputBitLength
+     * @return {*}
+     * @constructor
+     */
+    SHA: function (type, bits, textIn, outputBitLength) {
+        switch (type) {
+            case 1:
+                return gencryption.sha1.getHashOfTextSync.apply(this, [arguments[2]]);
+                break;
+            case 2:
+                gencryption.sha2.getHashOfTextSync.apply(this, [arguments[1], arguments[2]]);
+                break;
+            case 3:
+                gencryption.sha3.getHashOfTextSync.apply(this, [arguments[1], arguments[2]]);
+                break;
+            case "ke":
+                return gencryption.shake.getHashOfTextSync.apply(this, [arguments[1], arguments[3], arguments[2]]);
+                break;
+            default:
+                throw new Error("Unable to parse SHA " + type);
+        }
     },
-    RIPEMD160: function () {
-        return CryptoJS.RIPEMD160.apply(this, arguments).toString(CryptoJS.enc.Hex);
+    /**
+     * Keccak support
+     * @param bitSize [224, 256, 384, 512]
+     * @param stringIn
+     * @return {*}
+     */
+    keccak: function (bitSize, stringIn) {
+        return gencryption.keccak.getHashOfTextSync.apply(this, arguments);
     },
+    /**
+     * Whirlpool support
+     * @param stringIn
+     * @return {*}
+     */
+    whirlpool: function (stringIn) {
+        return gencryption.whirlpool.getHashOfTextSync.apply(this, arguments);
+    },
+    /**
+     * RIPEMD[160] support
+     * @param length
+     * @param stringIn
+     * @constructor
+     */
+    RIPEMD: function (length, stringIn) {
+        if (length === 160) {
+            return gencryption.ripemd160.getHashOfTextSync.apply(this, [arguments[1]]);
+        } else {
+            return gencryption.ripemd.getHashOfTextSync.apply(this, [arguments[1]]);
+        }
+    },
+    /**
+     * DSS1 support
+     * @param stringIn
+     * @return {*}
+     * @constructor
+     */
+    DSS1: function (stringIn) {
+        return gencryption.dss1.getHashOfTextSync.apply(this, arguments)
+    },
+    /**
+     * MDC2 support
+     * @param stringIn
+     * @return {*}
+     * @constructor
+     */
+    MDC2: function(stringIn) {
+        return gencryption.mdc2.getHashOfTextSync.apply(this, arguments);
+    },
+    /**
+     * BCrypt support
+     * @param stringIn
+     * @return {string|?string}
+     */
     bcrypt: function (stringIn) {
         return bcrypt.hashSync(stringIn, 10);
     }
