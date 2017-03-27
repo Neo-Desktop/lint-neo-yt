@@ -80,30 +80,6 @@ var cryptoShim = {
         cryptoShim.shim[type].update.apply(this, arguments);
         return cryptoShim.shim.out(cryptoShim.shim[type]);
     },
-    SHA2_256: function () {
-        var type = 'sha256';
-        cryptoShim.shim[type] = typeof cryptoShim.shim[type] === 'undefined' ? forge.md[type].create() : cryptoShim.shim[type];
-        cryptoShim.shim[type].update.apply(this, arguments);
-        return cryptoShim.shim.out(cryptoShim.shim[type]);
-    },
-    SHA2_224: function () {
-        var type = 'sha224';
-        cryptoShim.shim[type] = typeof cryptoShim.shim[type] === 'undefined' ? forge.md[type].create() : cryptoShim.shim[type];
-        cryptoShim.shim[type].update.apply(this, arguments);
-        return cryptoShim.shim.out(cryptoShim.shim[type]);
-    },
-    SHA2_384: function () {
-        var type = 'sha384';
-        cryptoShim.shim[type] = typeof cryptoShim.shim[type] === 'undefined' ? forge.md[type].create() : cryptoShim.shim[type];
-        cryptoShim.shim[type].update.apply(this, arguments);
-        return cryptoShim.shim.out(cryptoShim.shim[type]);
-    },
-    SHA2_512: function () {
-        var type = 'sha512';
-        cryptoShim.shim[type] = typeof cryptoShim.shim[type] === 'undefined' ? forge.md[type].create() : cryptoShim.shim[type];
-        cryptoShim.shim[type].update.apply(this, arguments);
-        return cryptoShim.shim.out(cryptoShim.shim[type]);
-    },
     RIPEMD160: function () {
         return CryptoJS.RIPEMD160.apply(this, arguments).toString(CryptoJS.enc.Hex);
     },
@@ -162,13 +138,13 @@ var hashShim = {
      * Calls hasher.setHash()
      */
     setHash: function (path) {
-        debug.type("setHash() in", arguments);
+        debug.type("setHash() in", JSON.stringify(arguments));
 
         // arguments[0]; // = type
         arguments[1] = btoa(arguments[1]); // = code
         arguments[2] = typeof arguments[2] !== 'undefined' ? btoa(arguments[2]) : arguments[2]; // hash
 
-        debug.type("setHash() out", arguments);
+        debug.type("setHash() out", JSON.stringify(arguments));
 
         hasher.setHash.apply(this, arguments);
     },
@@ -177,13 +153,13 @@ var hashShim = {
      * Calls hasher.replaceHash()
      */
     replaceHash: function (path) {
-        debug.type("replaceHash() in", arguments);
+        debug.type("replaceHash() in", JSON.stringify(arguments));
 
         // arguments[0]; // = type
         arguments[1] = btoa(arguments[1]); // = code
         arguments[2] = typeof arguments[2] !== 'undefined' ? btoa(arguments[2]) : arguments[2]; // hash
 
-        debug.type("replaceHash() out", arguments);
+        debug.type("replaceHash() out", JSON.stringify(arguments));
 
         hasher.replaceHash.apply(this, arguments);
     }
@@ -242,33 +218,59 @@ var config = {
         name: "Hash Tools",
         text: "Hash Tools",
         tabs: {
-            md: {
+            md_hash: {
                 name: "MD Hasher",
                 text: "MD"
             },
-            sha: {
+            sha_hash: {
                 name: "SHA Hasher",
                 text: "SHA"
             },
-            ripemd: {
+            ripemd_hash: {
                 name: "RIPEMD Hasher",
                 text: "RIPEMD"
             },
-            bcrypt: {
+            bcrypt_hash: {
                 name: "BCrypt Hasher",
                 text: "BCrypt"
             },
-            keccak: {
+            keccak_hash: {
                 name: "Keccak Hasher",
                 text: "Keccak"
             },
-            whirlpool: {
+            whirlpool_hash: {
                 name: "Whirlpool Hasher",
                 text: "Whirlpool"
             },
-            dss1: {
+            dss1_hash: {
                 name: "DSS1 Hasher",
                 text: "DSS1"
+            }
+        }
+    },
+    encryption_tools: {
+        name: "Encryption Tools",
+        text: "Encryption",
+        tabs: {
+            aes_enc: {
+                name: "AES Encryption",
+                text: "AES"
+            },
+            "3des_enc": {
+                name: "Triple DES Encryption",
+                text: "3-DES"
+            },
+            rc4_enc: {
+                name: "RC-4 Encryption",
+                text: "RC4"
+            },
+            rabbit_enc: {
+                name: "Rabbit Encryption",
+                text: "Rabbit"
+            },
+            evpkdf_enc: {
+                name: "Evpkdf Encryption",
+                text: "Evpkdf"
             }
         }
     }
@@ -279,7 +281,7 @@ $('window').ready(function () {
     // main I/O
     var input = $('#input');
     var output = $('#output');
-    var navbar = $('#navbar');
+    var navbar = $('#navbar').find('.nav');
 
     Object.keys(config).forEach(function (key) {
         if (key[0] === '_') {
@@ -290,7 +292,8 @@ $('window').ready(function () {
 
         var listItem = $('<li />')
             .attr('id', id)
-            .attr('data-name', config[key].name);
+            .attr('data-name', config[key].name)
+            .attr('data-function', key);
 
         var link = $('<a />')
             .attr('href', '#')
@@ -316,13 +319,13 @@ $('window').ready(function () {
                 .attr('role', 'menu');
 
             Object.keys(tabs).forEach(function (k2) {
-                debugger;
                 var id2 = k2 + '_tab';
 
                 var li = $('<li />')
                     .attr('id', id2)
                     .attr('data-extra-highlight', id)
                     .attr('data-name', tabs[k2].name)
+                    .attr('data-function', k2)
                     .appendTo(ul);
 
                 $('<a />')
@@ -335,7 +338,7 @@ $('window').ready(function () {
             listItem.append(ul);
         }
 
-        navbar.find('ul').append(listItem);
+        navbar.append(listItem);
     });
 
     /**
@@ -345,55 +348,37 @@ $('window').ready(function () {
      */
     var changeType = function (type, setHash) {
         setHash = typeof setHash !== 'boolean' ? true : setHash;
-        debug.type('changeType()', 'setHash: ' + (setHash ? 'true' : 'false'));
+        debug.type('changeType()', 'Start: ' + type + ' | setHash: ' + (setHash ? 'true' : 'false'));
 
         var hash = hashShim.getHash();
 
-        switch (type) {
-            case 'html':
-            case 'xml':
-            case 'json':
-            case 'js':
-            case 'css':
-            case 'sql':
-            case 'urlencode':
-            case 'urldecode':
-            case 'base64encode':
-            case 'base64decode':
-            case 'md5_hash':
-            case 'sha1_hash':
-            case 'sha2_224_hash':
-            case 'sha2_256_hash':
-            case 'sha2_384_hash':
-            case 'sha2_512_hash':
-            case 'sha3_hash':
-            case 'ripemd160_hash':
-            case 'bcrypt_hash':
-                debug.type('changeType()', 'type: ' + type);
-
-                navbar.find('.active').removeClass('active');
-                var tab = $('#' + type + '_tab');
-                tab.addClass('active');
-
-                if (tab.data('extra-highlight') !== '') {
-                    $('#' + tab.data('extra-highlight')).addClass('active');
-                }
-
-                $('#header').text(tab.data('name'));
-
-                if (setHash) {
-                    debug.type('changeType()', 'Calling hasher.sethash with {' + type + '} : {' + hash.code + '}');
-                    hashShim.setHash(type, hash.code);
-                } else {
-                    debug.type('changeType()', 'Not calling hasher.sethash');
-                }
-                break;
-
-            default:
-                debug.type('changeType()', 'Default Case: Calling hasher.sethash with {html} : {' + hash.code + '}');
-                hashShim.setHash('html', hash.code);
+        if (!(type in config)) {
+            debug.type('changeType()', 'Default Case: Calling hasher.sethash with {html} : {' + hash.code + '}');
+            hashShim.setHash('html', hash.code);
+            debug.type('changeType()', '----------End----------');
+            return;
         }
 
+        debug.type('changeType()', 'type: ' + type);
+
+        navbar.find('.active').removeClass('active');
+        var tab = $('#' + type + '_tab');
+        tab.addClass('active');
+
+        if (tab.data('extra-highlight') !== '') {
+            $('#' + tab.data('extra-highlight')).addClass('active');
+        }
+
+        $('#header').text(tab.data('name'));
+
+        if (setHash) {
+            debug.type('changeType()', 'Calling hasher.sethash with {' + type + '} : {' + hash.code + '}');
+            hashShim.setHash(type, hash.code);
+        } else {
+            debug.type('changeType()', 'Not calling hasher.sethash');
+        }
+
+        debug.type('changeType()', '----------End----------');
     };
 
     /**
@@ -443,25 +428,13 @@ $('window').ready(function () {
                 case 'base64decode':
                     stringOut = hljs.highlight('yaml', atob(code), true).value;
                     break;
-                case 'md5_hash':
+                case 'md_hash':
                     stringOut = hljs.highlight('yaml', cryptoShim.MD5(code), true).value;
                     break;
-                case 'sha1_hash':
+                case 'sha_hash':
                     stringOut = hljs.highlight('yaml', cryptoShim.SHA1(code), true).value;
                     break;
-                case 'sha2_224_hash':
-                    stringOut = hljs.highlight('yaml', cryptoShim.SHA2_224(code), true).value;
-                    break;
-                case 'sha2_256_hash':
-                    stringOut = hljs.highlight('yaml', cryptoShim.SHA2_256(code), true).value;
-                    break;
-                case 'sha2_384_hash':
-                    stringOut = hljs.highlight('yaml', cryptoShim.SHA2_384(code), true).value;
-                    break;
-                case 'sha2_512_hash':
-                    stringOut = hljs.highlight('yaml', cryptoShim.SHA2_512(code), true).value;
-                    break;
-                case 'ripemd160_hash':
+                case 'ripemd_hash':
                     stringOut = hljs.highlight('yaml', cryptoShim.RIPEMD160(code), true).value;
                     break;
                 case 'bcrypt_hash':
@@ -504,13 +477,21 @@ $('window').ready(function () {
     hasher.init();
 
     // hook into the navbar tabs and use hasher for them
-    navbar.find('>ul>li:not(.dropdown)').click(function (e) {
+    navbar.find('li:not(.dropdown)').click(function (e) {
         e.preventDefault();
-        changeType(this.id.replace('_tab', ''));
+        var t = $(this);
+        var func = t.data('function');
+        var dbinfo = {
+            id: t.attr('id'),
+            func: t.data('function')
+        };
+        debug.type('navbar.find()', 'fired! ' + JSON.stringify(dbinfo));
+        changeType(func);
     });
-    navbar.find('.dropdown>ul>li').click(function (e) {
+
+    $(".navbar-brand").click(function (e) {
         e.preventDefault();
-        changeType(this.id.replace('_tab', ''));
+        changeType('html');
     });
 
     // function main ()
