@@ -2,7 +2,7 @@
 CSS Boilerplate
 */
 
-@import url('../node_modules/bootstrap/dist/css/bootstrap.min.css');
+@import url('../node_modules/bootstrap.native/assets/css/bootstrap.min.css');
 @import url('../node_modules/bootswatch/darkly/bootstrap.min.css');
 @import url('../node_modules/highlight.js/styles/default.css');
 @import url('../node_modules/highlight.js/styles/monokai-sublime.css');

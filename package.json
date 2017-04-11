@@ -14,7 +14,7 @@
   "repository": "https://github.com/Neo-Desktop/lint-neo-yt",
   "devDependencies": {
     "bcryptjs": "^2.4.3",
-    "bootstrap": "^3.3.7",
+    "bootstrap.native": "^2.0.8",
     "bootswatch": "^3.3.7",
     "browserify": "^14.1.0",
     "browserify-css": "^0.10.0",
@@ -38,6 +38,7 @@
     "node-forge": "^0.7.0",
     "sql-formatter": "^1.2.0",
     "uglifyify": "^3.0.4",
+    "whirlpool": "0.0.4",
     "xml-beautifier": "^0.3.0"
   },
   "grunt": {

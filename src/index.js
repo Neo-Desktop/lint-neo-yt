@@ -26,7 +26,7 @@ window.$ = window.jQuery = require('jquery');
 
 // include bootstrap css and javascript
 require('./index.css');
-require('bootstrap');
+var bsn = require('bootstrap.native');
 
 // use hasher for application page management
 var hasher = require('hasher');
@@ -62,6 +62,9 @@ var forge = require('node-forge');
 // gencryption
 var gencryption = require("gencryption");
 
+// whirlpool
+var whirlpool = require("whirlpool");
+
 var cryptoShim = {
     shim: {
         out: function (md) {
@@ -79,11 +82,11 @@ var cryptoShim = {
         switch (type) {
             case 4:
                 type = "md4";
-                return gencryption.md4.getHashOfTextSync.apply(this, [arguments[1]]);
+                return gencryption.md4.getHashOfTextSync.apply(this, [textIn]);
                 break;
             case 5:
                 type = "md5";
-                return gencryption.md5.getHashOfTextSync.apply(this, [arguments[1]]);
+                return gencryption.md5.getHashOfTextSync.apply(this, [textIn]);
             default:
                 throw new Error("Unable to parse MD " + type);
         }
@@ -100,16 +103,16 @@ var cryptoShim = {
     SHA: function (type, bits, textIn, outputBitLength) {
         switch (type) {
             case 1:
-                return gencryption.sha1.getHashOfTextSync.apply(this, [arguments[2]]);
+                return gencryption.sha1.getHashOfTextSync.apply(this, [textIn]);
                 break;
             case 2:
-                gencryption.sha2.getHashOfTextSync.apply(this, [arguments[1], arguments[2]]);
+                return gencryption.sha2.getHashOfTextSync.apply(this, [bits, textIn]);
                 break;
             case 3:
-                gencryption.sha3.getHashOfTextSync.apply(this, [arguments[1], arguments[2]]);
+                return gencryption.sha3.getHashOfTextSync.apply(this, [bits, textIn]);
                 break;
             case "ke":
-                return gencryption.shake.getHashOfTextSync.apply(this, [arguments[1], arguments[3], arguments[2]]);
+                return gencryption.shake.getHashOfTextSync.apply(this, [bits, outputBitLength, textIn]);
                 break;
             default:
                 throw new Error("Unable to parse SHA " + type);
@@ -122,7 +125,7 @@ var cryptoShim = {
      * @return {*}
      */
     keccak: function (bitSize, stringIn) {
-        return gencryption.keccak.getHashOfTextSync.apply(this, arguments);
+        return gencryption.keccak.getHashOfTextSync.apply(this, [bitSize, stringIn]);
     },
     /**
      * Whirlpool support
@@ -130,7 +133,7 @@ var cryptoShim = {
      * @return {*}
      */
     whirlpool: function (stringIn) {
-        return gencryption.whirlpool.getHashOfTextSync.apply(this, arguments);
+        return whirlpool.apply(this, [stringIn]);
     },
     /**
      * RIPEMD[160] support
@@ -140,9 +143,9 @@ var cryptoShim = {
      */
     RIPEMD: function (length, stringIn) {
         if (length === 160) {
-            return gencryption.ripemd160.getHashOfTextSync.apply(this, [arguments[1]]);
+            return gencryption.ripemd160.getHashOfTextSync.apply(this, [stringIn]);
         } else {
-            return gencryption.ripemd.getHashOfTextSync.apply(this, [arguments[1]]);
+            return gencryption.ripemd.getHashOfTextSync.apply(this, [stringIn]);
         }
     },
     /**
@@ -152,7 +155,7 @@ var cryptoShim = {
      * @constructor
      */
     DSS1: function (stringIn) {
-        return gencryption.dss1.getHashOfTextSync.apply(this, arguments)
+        return gencryption.dss1.getHashOfTextSync.apply(this, [stringIn])
     },
     /**
      * MDC2 support
@@ -160,8 +163,8 @@ var cryptoShim = {
      * @return {*}
      * @constructor
      */
-    MDC2: function(stringIn) {
-        return gencryption.mdc2.getHashOfTextSync.apply(this, arguments);
+    MDC2: function (stringIn) {
+        return gencryption.mdc2.getHashOfTextSync.apply(this, [stringIn]);
     },
     /**
      * BCrypt support
@@ -169,7 +172,7 @@ var cryptoShim = {
      * @return {string|?string}
      */
     bcrypt: function (stringIn) {
-        return bcrypt.hashSync(stringIn, 10);
+        return bcrypt.hashSync.apply(this, [stringIn, 10]);
     }
 };
 
@@ -330,6 +333,10 @@ var config = {
             dss1_hash: {
                 name: "DSS1 Hasher",
                 text: "DSS1"
+            },
+            mdc2_hash: {
+                name: "MDC2 Hasher",
+                text: "MDC2"
             }
         }
     },
@@ -361,6 +368,20 @@ var config = {
     }
 };
 
+var shim = {
+    /**
+     * Shim for d.gEBI();
+     * @param id
+     * @return {Element}
+     */
+    element: function(id) {
+        if (id.substring(0, 1) === '#') {
+            id = id.substring(1);
+        }
+        return document.getElementById(id);
+    }
+};
+
 $('window').ready(function () {
 
     // main I/O
@@ -373,19 +394,24 @@ $('window').ready(function () {
             return;
         }
 
-        var id = key + '_tab';
+        var listItemID = key + '_tab';
+        var linkID = key + '_link';
 
         var listItem = $('<li />')
-            .attr('id', id)
+            .attr('id', listItemID)
             .attr('data-name', config[key].name)
             .attr('data-function', key);
 
         var link = $('<a />')
+            .attr('id', linkID)
             .attr('href', '#')
             .html(config[key].text)
             .appendTo(listItem);
 
+        navbar.append(listItem);
+
         if (config[key].hasOwnProperty('tabs')) {
+
             var tabs = config[key].tabs;
 
             listItem.addClass('dropdown');
@@ -408,7 +434,7 @@ $('window').ready(function () {
 
                 var li = $('<li />')
                     .attr('id', id2)
-                    .attr('data-extra-highlight', id)
+                    .attr('data-extra-highlight', listItemID)
                     .attr('data-name', tabs[k2].name)
                     .attr('data-function', k2)
                     .appendTo(ul);
@@ -419,11 +445,11 @@ $('window').ready(function () {
                     .appendTo(li);
 
             });
-
             listItem.append(ul);
+
+            new bsn.Dropdown(shim.element(linkID), {persist: true});
         }
 
-        navbar.append(listItem);
     });
 
     /**
@@ -437,7 +463,19 @@ $('window').ready(function () {
 
         var hash = hashShim.getHash();
 
-        if (!(type in config)) {
+        var exists = false;
+
+        for (var key in config) {
+            if (config.hasOwnProperty(type)) {
+                exists = true;
+                break;
+            }
+            else if (config[key].hasOwnProperty('tabs') && config[key].tabs.hasOwnProperty(type)) {
+                exists = true;
+                break;
+            }
+        }
+        if (!exists) {
             debug.type('changeType()', 'Default Case: Calling hasher.sethash with {html} : {' + hash.code + '}');
             hashShim.setHash('html', hash.code);
             debug.type('changeType()', '----------End----------');
@@ -446,10 +484,14 @@ $('window').ready(function () {
 
         debug.type('changeType()', 'type: ' + type);
 
+        // de-highlight currently highlighted tab
         navbar.find('.active').removeClass('active');
+
+        // add highlighting to active tab
         var tab = $('#' + type + '_tab');
         tab.addClass('active');
 
+        // if it's a sub tab this will be populated
         if (tab.data('extra-highlight') !== '') {
             $('#' + tab.data('extra-highlight')).addClass('active');
         }
@@ -501,6 +543,7 @@ $('window').ready(function () {
                 case 'sql':
                     stringOut = hljs.highlight('sql', beautify_sql.format(code), true).value;
                     break;
+
                 case 'urlencode':
                     stringOut = hljs.highlight('yaml', encodeURIComponent(code), true).value;
                     break;
@@ -513,14 +556,27 @@ $('window').ready(function () {
                 case 'base64decode':
                     stringOut = hljs.highlight('yaml', atob(code), true).value;
                     break;
+
                 case 'md_hash':
-                    stringOut = hljs.highlight('yaml', cryptoShim.MD5(code), true).value;
+                    stringOut = hljs.highlight('yaml', cryptoShim.MD(5, code), true).value;
                     break;
                 case 'sha_hash':
-                    stringOut = hljs.highlight('yaml', cryptoShim.SHA1(code), true).value;
+                    stringOut = hljs.highlight('yaml', cryptoShim.SHA(1, null, code, null), true).value;
                     break;
                 case 'ripemd_hash':
-                    stringOut = hljs.highlight('yaml', cryptoShim.RIPEMD160(code), true).value;
+                    stringOut = hljs.highlight('yaml', cryptoShim.RIPEMD(160, code), true).value;
+                    break;
+                case 'keccak_hash':
+                    stringOut = hljs.highlight('yaml', cryptoShim.keccak(512, code), true).value;
+                    break;
+                case 'whirlpool_hash':
+                    stringOut = hljs.highlight('yaml', cryptoShim.whirlpool(code), true).value;
+                    break;
+                case 'dss1_hash':
+                    stringOut = hljs.highlight('yaml', cryptoShim.DSS1(code), true).value;
+                    break;
+                case 'mdc2_hash':
+                    stringOut = hljs.highlight('yaml', cryptoShim.MDC2(code), true).value;
                     break;
                 case 'bcrypt_hash':
                     stringOut = hljs.highlight('yaml', cryptoShim.bcrypt(code), true).value;
